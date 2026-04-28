@@ -1,38 +1,24 @@
 const express = require('express');
-const https = require('https');
+const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.ANTHROPIC_API_KEY;
 
-app.use(express.json({ limit: '20mb' }));
+app.use(express.json({ limit: '50mb' }));
 app.use(express.static('public'));
 
-function callAnthropic(body) {
-  return new Promise((resolve, reject) => {
-    const payload = JSON.stringify(body);
-    const options = {
-      hostname: 'api.anthropic.com',
-      path: '/v1/messages',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(payload),
-        'x-api-key': API_KEY,
-        'anthropic-version': '2023-06-01'
-      }
-    };
-    const req = https.request(options, (res) => {
-      let data = '';
-      res.on('data', chunk => data += chunk);
-      res.on('end', () => {
-        try { resolve(JSON.parse(data)); }
-        catch (e) { reject(new Error('Respuesta inválida de la API')); }
-      });
-    });
-    req.on('error', reject);
-    req.write(payload);
-    req.end();
+async function callAnthropic(body) {
+  const response = await axios.post('https://api.anthropic.com/v1/messages', body, {
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': API_KEY,
+      'anthropic-version': '2023-06-01'
+    },
+    maxBodyLength: Infinity,
+    maxContentLength: Infinity,
+    timeout: 120000
   });
+  return response.data;
 }
 
 app.post('/api/analyze', async (req, res) => {
@@ -77,12 +63,12 @@ Responde SOLO con JSON válido, sin texto ni markdown:
       }]
     });
 
-    if (data.error) return res.status(400).json({ error: data.error.message });
     const text = (data.content || []).map(b => b.text || '').join('');
     const clean = text.replace(/```json|```/g, '').trim();
     res.json(JSON.parse(clean));
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    const msg = e.response?.data?.error?.message || e.message || 'Error desconocido';
+    res.status(500).json({ error: msg });
   }
 });
 
@@ -91,15 +77,11 @@ app.post('/api/procesal', async (req, res) => {
   try {
     const { audiencia } = req.body;
     const prompt = `Eres un abogado chileno experto en derecho procesal civil y litigación inmobiliaria.
+Basándote en los datos de una audiencia judicial, redacta un resumen claro del estado procesal.
+Explica en qué etapa está el proceso, qué significa la audiencia, próximos pasos y relevancia para las partes.
+3-5 párrafos en español. Usa <strong> para términos legales importantes.
 
-Basándote en los siguientes datos de una audiencia judicial, redacta un resumen claro del estado procesal de la causa.
-Explica: en qué etapa del proceso se encuentra, qué significa la audiencia programada, cuáles son los próximos pasos habituales y qué importancia tiene para las partes.
-Si hay propiedad o inmueble involucrado, explica su relevancia en el contexto del juicio.
-Escribe en español, de forma clara y directa, en 3-5 párrafos cortos.
-Usa <strong> para resaltar términos legales importantes.
-
-Datos de la audiencia:
-${JSON.stringify(audiencia, null, 2)}`;
+Datos: ${JSON.stringify(audiencia, null, 2)}`;
 
     const data = await callAnthropic({
       model: 'claude-sonnet-4-6',
@@ -107,11 +89,11 @@ ${JSON.stringify(audiencia, null, 2)}`;
       messages: [{ role: 'user', content: prompt }]
     });
 
-    if (data.error) return res.status(400).json({ error: data.error.message });
     const text = (data.content || []).map(b => b.text || '').join('').trim();
     res.json({ resumen: text });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    const msg = e.response?.data?.error?.message || e.message || 'Error desconocido';
+    res.status(500).json({ error: msg });
   }
 });
 
