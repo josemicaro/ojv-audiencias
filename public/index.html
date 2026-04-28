@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OJV — Audiencias</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=IBM+Plex+Sans:wght@300;400;500&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0f1f38;
+  --navy-light: #1a3055;
+  --navy-border: #243d5c;
+  --amber: #c8893a;
+  --amber-light: #e8a84e;
+  --amber-pale: #fdf3e3;
+  --cream: #f8f5f0;
+  --white: #ffffff;
+  --text: #1a1a2e;
+  --text-muted: #5a6070;
+  --text-light: #8892a0;
+  --border: #e2ddd6;
+  --border-light: #ede9e2;
+  --danger: #c0392b;
+  --danger-bg: #fdf0ee;
+  --success: #2d6a4f;
+  --success-bg: #eaf4ef;
+  --info: #185fa5;
+  --info-bg: #e8f1fb;
+  --warn: #8a5800;
+  --warn-bg: #fef8ec;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --shadow: 0 2px 12px rgba(15,31,56,0.10);
+  --shadow-lg: 0 8px 32px rgba(15,31,56,0.16);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'IBM Plex Sans', sans-serif; background: var(--cream); color: var(--text); min-height: 100vh; }
+
+header {
+  background: var(--navy);
+  padding: 0 2rem;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 64px; position: sticky; top: 0; z-index: 100;
+  border-bottom: 1px solid var(--navy-border);
+}
+.logo { display: flex; align-items: center; gap: 12px; }
+.logo-icon { width: 34px; height: 34px; background: var(--amber); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.logo-icon svg { width: 18px; height: 18px; fill: var(--white); }
+.logo-text { font-family: 'Playfair Display', serif; font-size: 17px; color: var(--white); letter-spacing: 0.02em; }
+.logo-sub { font-size: 11px; color: #7a9bc0; letter-spacing: 0.08em; text-transform: uppercase; }
+
+main { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+.upload-section { max-width: 600px; margin: 3rem auto; }
+.upload-title { font-family: 'Playfair Display', serif; font-size: 28px; color: var(--navy); margin-bottom: 8px; }
+.upload-desc { font-size: 14px; color: var(--text-muted); margin-bottom: 2rem; line-height: 1.6; }
+.drop-zone {
+  border: 2px dashed var(--border); border-radius: var(--radius-lg);
+  padding: 3rem 2rem; text-align: center; cursor: pointer;
+  transition: all 0.2s; background: var(--white);
+}
+.drop-zone:hover, .drop-zone.drag { border-color: var(--amber); background: var(--amber-pale); }
+.drop-zone input { display: none; }
+.drop-icon { font-size: 40px; margin-bottom: 16px; }
+.drop-main { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+.drop-sub { font-size: 13px; color: var(--text-muted); }
+.hint-box { background: var(--white); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 1rem 1.25rem; margin-top: 1.5rem; }
+.hint-title { font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--amber); margin-bottom: 6px; }
+.hint-text { font-size: 13px; color: var(--text-muted); line-height: 1.7; }
+
+.loading-wrap { text-align: center; padding: 5rem 2rem; }
+.spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--amber); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 1.5rem; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-title { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--navy); margin-bottom: 8px; }
+.loading-sub { font-size: 13px; color: var(--text-muted); }
+
+.dash-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 12px; }
+.dash-title { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--navy); }
+.dash-meta { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+.dash-actions { display: flex; gap: 8px; }
+.btn { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--white); font-size: 13px; cursor: pointer; color: var(--text); font-family: 'IBM Plex Sans', sans-serif; transition: all 0.15s; }
+.btn:hover { border-color: var(--navy-border); background: var(--cream); }
+.btn-amber { background: var(--amber); border-color: var(--amber); color: var(--white); font-weight: 500; }
+.btn-amber:hover { background: var(--amber-light); border-color: var(--amber-light); }
+
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+.metric { background: var(--white); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 1rem 1.1rem; }
+.metric-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-light); margin-bottom: 6px; }
+.metric-value { font-size: 28px; font-weight: 300; color: var(--navy); line-height: 1; }
+.metric-value.amber { color: var(--amber); }
+.metric-value.danger { color: var(--danger); }
+.metric-value.success { color: var(--success); }
+
+.search-bar { position: relative; margin-bottom: 1rem; }
+.search-bar input { width: 100%; padding: 10px 16px 10px 40px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; background: var(--white); color: var(--text); font-family: 'IBM Plex Sans', sans-serif; }
+.search-bar input:focus { outline: none; border-color: var(--amber); }
+.search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--text-light); font-size: 16px; pointer-events: none; }
+
+.table-wrap { background: var(--white); border: 1px solid var(--border-light); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow); }
+table { width: 100%; border-collapse: collapse; }
+thead { background: var(--navy); }
+th { padding: 11px 14px; font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.09em; color: #8fb3d4; text-align: left; }
+tbody tr { cursor: pointer; transition: background 0.12s; }
+tbody tr:hover td { background: var(--amber-pale); }
+td { padding: 12px 14px; border-bottom: 1px solid var(--border-light); font-size: 13px; vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+.td-hora { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.td-rit { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--navy); }
+.td-rol { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.td-ubic { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.td-partes-r { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+.badge { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+.badge-info { background: var(--info-bg); color: var(--info); }
+.badge-success { background: var(--success-bg); color: var(--success); }
+.badge-danger { background: var(--danger-bg); color: var(--danger); }
+.badge-warn { background: var(--warn-bg); color: var(--warn); }
+.badge-gray { background: #f0eee8; color: #5a6070; }
+
+.overlay { position: fixed; inset: 0; background: rgba(10,20,40,0.65); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal { background: var(--white); border-radius: var(--radius-lg); width: 100%; max-width: 680px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); animation: slideUp 0.25s ease; }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal-header { background: var(--navy); padding: 1.25rem 1.5rem; border-radius: var(--radius-lg) var(--radius-lg) 0 0; display: flex; justify-content: space-between; align-items: flex-start; position: sticky; top: 0; }
+.modal-title { font-family: 'Playfair Display', serif; font-size: 17px; color: var(--white); }
+.modal-rit { font-size: 12px; color: #7a9bc0; font-family: 'IBM Plex Mono', monospace; margin-top: 3px; }
+.modal-close { background: none; border: none; color: #7a9bc0; font-size: 20px; cursor: pointer; padding: 0 0 0 12px; line-height: 1; transition: color 0.15s; }
+.modal-close:hover { color: var(--white); }
+.modal-body { padding: 1.5rem; }
+.modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
+.modal-field { background: var(--cream); border-radius: 8px; padding: 10px 14px; }
+.modal-field-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--amber); margin-bottom: 4px; }
+.modal-field-value { font-size: 13px; color: var(--text); line-height: 1.5; }
+.modal-field-value.mono { font-family: 'IBM Plex Mono', monospace; }
+.modal-field.full { grid-column: 1 / -1; }
+
+.procesal-section { border-top: 1px solid var(--border-light); padding-top: 1.25rem; margin-top: 0.5rem; }
+.procesal-title { font-family: 'Playfair Display', serif; font-size: 15px; color: var(--navy); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+.procesal-spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--amber); border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; }
+.procesal-content { background: var(--cream); border-left: 3px solid var(--amber); border-radius: 0 8px 8px 0; padding: 1rem 1.25rem; font-size: 14px; line-height: 1.75; color: var(--text); }
+.procesal-content p { margin-bottom: 0.75rem; }
+.procesal-content p:last-child { margin-bottom: 0; }
+.procesal-content strong { color: var(--navy); font-weight: 500; }
+
+.empty-state { text-align: center; padding: 3rem; color: var(--text-muted); font-size: 14px; }
+.result-count { font-size: 12px; color: var(--text-light); margin-top: 8px; text-align: right; }
+.error-box { background: var(--danger-bg); border: 1px solid #f0c0bb; border-radius: var(--radius); padding: 1rem 1.25rem; margin-top: 1rem; color: var(--danger); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/></svg>
+    </div>
+    <div>
+      <div class="logo-text">Audiencias OJV</div>
+      <div class="logo-sub">Oficina Judicial Virtual</div>
+    </div>
+  </div>
+</header>
+
+<main id="app">
+  <div id="upload-view" class="upload-section">
+    <h1 class="upload-title">Lista de audiencias</h1>
+    <p class="upload-desc">Carga el PDF descargado desde la OJV. La IA extraerá automáticamente todas las audiencias, propiedades, roles y partes involucradas.</p>
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()"
+         ondragover="onDrag(event,true)" ondragleave="onDrag(event,false)" ondrop="onDrop(event)">
+      <input type="file" id="fileInput" accept=".pdf,application/pdf" onchange="handleFile(this.files[0])">
+      <div class="drop-icon">📋</div>
+      <div class="drop-main">Arrastra el PDF aquí o haz clic para seleccionar</div>
+      <div class="drop-sub">Archivo .pdf de audiencias de la OJV</div>
+    </div>
+    <div class="hint-box">
+      <div class="hint-title">Cómo obtener el PDF</div>
+      <div class="hint-text">Ingresa a la OJV → selecciona el tribunal → descarga la lista de audiencias. La app extrae: fecha, hora, RIT, rol de la propiedad, tipo, materia, partes y genera el resumen del estado procesal de cada causa.</div>
+    </div>
+    <div id="uploadError" class="error-box" style="display:none;"></div>
+  </div>
+
+  <div id="loading-view" style="display:none">
+    <div class="loading-wrap">
+      <div class="spinner"></div>
+      <div class="loading-title">Analizando el documento...</div>
+      <div class="loading-sub" id="loadingFile">La IA está extrayendo los datos de audiencias</div>
+    </div>
+  </div>
+
+  <div id="results-view" style="display:none">
+    <div class="dash-header">
+      <div>
+        <h2 class="dash-title" id="dashTitle">Audiencias del día</h2>
+        <div class="dash-meta" id="dashMeta"></div>
+      </div>
+      <div class="dash-actions">
+        <button class="btn" onclick="exportCSV()">Exportar CSV</button>
+        <button class="btn btn-amber" onclick="resetApp()">Nuevo PDF</button>
+      </div>
+    </div>
+    <div class="metrics" id="metrics"></div>
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Buscar por RIT, partes, propiedad, rol..." oninput="renderTable()">
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha / Hora</th>
+            <th>RIT / Rol</th>
+            <th>Tipo / Materia</th>
+            <th>Propiedad / Ubicación</th>
+            <th>Partes</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="result-count" id="resultCount"></div>
+  </div>
+</main>
+
+<div class="overlay" id="modal" style="display:none" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modalTitle">Detalle de audiencia</div>
+        <div class="modal-rit" id="modalRit"></div>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('modal').style.display='none'">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-grid" id="modalGrid"></div>
+      <div class="procesal-section">
+        <div class="procesal-title">
+          <span>Resumen estado procesal</span>
+          <span class="procesal-spinner" id="procesalSpinner"></span>
+        </div>
+        <div class="procesal-content" id="procesalContent">Cargando análisis...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let allData = null;
+
+function onDrag(e, active) { e.preventDefault(); document.getElementById('dropZone').classList.toggle('drag', active); }
+function onDrop(e) { e.preventDefault(); document.getElementById('dropZone').classList.remove('drag'); const f = e.dataTransfer.files[0]; if (f) handleFile(f); }
+
+async function handleFile(file) {
+  if (!file) return;
+  document.getElementById('uploadError').style.display = 'none';
+  show('loading-view');
+  document.getElementById('loadingFile').textContent = file.name;
+  try {
+    const base64 = await toBase64(file);
+    const res = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ base64, filename: file.name })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    allData = data;
+    renderDashboard();
+    show('results-view');
+  } catch (e) {
+    show('upload-view');
+    document.getElementById('uploadError').style.display = 'block';
+    document.getElementById('uploadError').textContent = '❌ Error: ' + (e.message || 'Intente de nuevo');
+  }
+}
+
+function toBase64(file) {
+  return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(',')[1]); r.onerror = rej; r.readAsDataURL(file); });
+}
+
+function show(id) {
+  ['upload-view','loading-view','results-view'].forEach(v => document.getElementById(v).style.display = v === id ? 'block' : 'none');
+}
+
+function resetApp() { allData = null; show('upload-view'); document.getElementById('searchInput').value = ''; }
+
+function renderDashboard() {
+  const d = allData;
+  document.getElementById('dashTitle').textContent = d.tribunal_principal || 'Audiencias del día';
+  document.getElementById('dashMeta').textContent = d.fecha_documento ? 'Documento: ' + d.fecha_documento : '';
+  const total = d.audiencias?.length || 0;
+  const susp = d.audiencias?.filter(a => a.estado?.toLowerCase().includes('suspendid')).length || 0;
+  const conProp = d.audiencias?.filter(a => a.propiedad || a.rol_propiedad).length || 0;
+  const tipos = [...new Set(d.audiencias?.map(a => a.tipo).filter(Boolean))].length;
+  document.getElementById('metrics').innerHTML = `
+    <div class="metric"><div class="metric-label">Total audiencias</div><div class="metric-value">${total}</div></div>
+    <div class="metric"><div class="metric-label">Con propiedad</div><div class="metric-value success">${conProp}</div></div>
+    <div class="metric"><div class="metric-label">Suspendidas</div><div class="metric-value danger">${susp}</div></div>
+    <div class="metric"><div class="metric-label">Tipos distintos</div><div class="metric-value amber">${tipos}</div></div>`;
+  renderTable();
+}
+
+function renderTable() {
+  const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  const rows = (allData?.audiencias || []).filter(a => !q || Object.values(a).some(v => v && String(v).toLowerCase().includes(q)));
+  const badge = s => {
+    if (!s) return '<span class="badge badge-gray">—</span>';
+    const e = s.toLowerCase();
+    if (e.includes('suspendid')) return `<span class="badge badge-danger">${s}</span>`;
+    if (e.includes('programad')) return `<span class="badge badge-info">${s}</span>`;
+    if (e.includes('realiz') || e.includes('terminad')) return `<span class="badge badge-success">${s}</span>`;
+    return `<span class="badge badge-warn">${s}</span>`;
+  };
+  document.getElementById('tableBody').innerHTML = rows.length === 0
+    ? `<tr><td colspan="6" class="empty-state">${q ? 'Sin resultados' : 'No se encontraron audiencias'}</td></tr>`
+    : rows.map(a => {
+        const idx = allData.audiencias.indexOf(a);
+        return `<tr onclick="openModal(${idx})">
+          <td><div style="font-weight:500">${a.fecha||'—'}</div>${a.hora?`<div class="td-hora">${a.hora}</div>`:''}</td>
+          <td><div class="td-rit">${a.rit||'—'}</div>${a.rol_propiedad?`<div class="td-rol">Rol: ${a.rol_propiedad}</div>`:''}</td>
+          <td>${a.tipo?`<span class="badge badge-info">${a.tipo}</span>`:'—'}${a.materia?`<br><span style="font-size:11px;color:#5a6070">${a.materia}</span>`:''}</td>
+          <td>${a.propiedad?`<div>${a.propiedad}</div>`:''}${a.ubicacion?`<div class="td-ubic">${a.ubicacion}</div>`:''}${!a.propiedad&&!a.ubicacion?'—':''}</td>
+          <td>${a.demandante?`<div style="font-size:12px">${a.demandante}</div>`:''}${a.demandado?`<div class="td-partes-r">vs. ${a.demandado}</div>`:''}${!a.demandante&&!a.demandado?'—':''}</td>
+          <td>${badge(a.estado)}</td>
+        </tr>`;
+      }).join('');
+  document.getElementById('resultCount').textContent = q ? `Mostrando ${rows.length} de ${allData.audiencias.length} audiencias` : '';
+}
+
+async function openModal(idx) {
+  const a = allData.audiencias[idx];
+  document.getElementById('modal').style.display = 'flex';
+  document.getElementById('modalTitle').textContent = a.propiedad || a.tipo || 'Audiencia';
+  document.getElementById('modalRit').textContent = [a.rit, a.rol_propiedad ? 'Rol ' + a.rol_propiedad : null].filter(Boolean).join(' · ');
+  const fields = [
+    { label: 'Fecha', value: a.fecha }, { label: 'Hora', value: a.hora },
+    { label: 'RIT / RUC', value: a.rit, mono: true }, { label: 'Rol de la propiedad', value: a.rol_propiedad, mono: true },
+    { label: 'Tipo de audiencia', value: a.tipo }, { label: 'Materia', value: a.materia },
+    { label: 'Tribunal', value: a.tribunal, full: true },
+    { label: 'Propiedad', value: a.propiedad, full: true },
+    { label: 'Ubicación', value: a.ubicacion }, { label: 'Estado', value: a.estado },
+    { label: 'Demandante', value: a.demandante }, { label: 'Demandado', value: a.demandado },
+    { label: 'Observaciones', value: a.observaciones, full: true },
+  ].filter(f => f.value);
+  document.getElementById('modalGrid').innerHTML = fields.map(f =>
+    `<div class="modal-field${f.full?' full':''}"><div class="modal-field-label">${f.label}</div><div class="modal-field-value${f.mono?' mono':''}">${f.value}</div></div>`
+  ).join('');
+  document.getElementById('procesalSpinner').style.display = 'inline-block';
+  document.getElementById('procesalContent').innerHTML = 'Generando análisis...';
+  try {
+    const res = await fetch('/api/procesal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ audiencia: a })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    const html = data.resumen.split('\n\n').map(p => `<p>${p.trim()}</p>`).join('');
+    document.getElementById('procesalContent').innerHTML = html;
+  } catch (e) {
+    document.getElementById('procesalContent').innerHTML = 'No se pudo generar el resumen: ' + e.message;
+  } finally {
+    document.getElementById('procesalSpinner').style.display = 'none';
+  }
+}
+
+function closeModal(e) { if (e.target.id === 'modal') document.getElementById('modal').style.display = 'none'; }
+
+function exportCSV() {
+  if (!allData?.audiencias) return;
+  const cols = ['fecha','hora','rit','rol_propiedad','tipo','materia','tribunal','propiedad','ubicacion','demandante','demandado','estado','observaciones'];
+  const csv = '\uFEFF' + [cols.join(';'), ...allData.audiencias.map(a => cols.map(c => `"${(a[c]||'').replace(/"/g,'""')}"`).join(';'))].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+  a.download = `audiencias_ojv_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+</script>
+</body>
+</html>
