@@ -52,7 +52,7 @@ Responde SOLO con JSON válido, sin texto ni markdown:
 }`;
 
     const data = await callAnthropic({
-      model: 'claude-haiku-4-5-20251001',
+      model: 'claude-sonnet-4-6',
       max_tokens: 4000,
       messages: [{
         role: 'user',
@@ -72,7 +72,8 @@ Responde SOLO con JSON válido, sin texto ni markdown:
   }
 });
 
-app.post('/api/procesal', async (req, res) => {
+app.post("/api/procesal", async (req, res) => {
+  await new Promise(r => setTimeout(r, 3000));
   if (!API_KEY) return res.status(500).json({ error: 'API key no configurada en el servidor.' });
   try {
     const { audiencia } = req.body;
@@ -84,7 +85,7 @@ Explica en qué etapa está el proceso, qué significa la audiencia, próximos p
 Datos: ${JSON.stringify(audiencia, null, 2)}`;
 
     const data = await callAnthropic({
-      model: 'claude-haiku-4-5-20251001',
+      model: 'claude-sonnet-4-6',
       max_tokens: 1000,
       messages: [{ role: 'user', content: prompt }]
     });
