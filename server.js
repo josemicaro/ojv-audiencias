@@ -66,7 +66,7 @@ Responde SOLO con JSON válido, sin texto ni markdown:
 }`;
 
     const data = await callAnthropic({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 4000,
       messages: [{
         role: 'user',
@@ -102,7 +102,7 @@ Datos de la audiencia:
 ${JSON.stringify(audiencia, null, 2)}`;
 
     const data = await callAnthropic({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-4-6',
       max_tokens: 1000,
       messages: [{ role: 'user', content: prompt }]
     });
