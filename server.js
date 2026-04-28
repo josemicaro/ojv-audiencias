@@ -1,4 +1,5 @@
 const express = require('express');
+const https = require('https');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.ANTHROPIC_API_KEY;
@@ -6,11 +7,38 @@ const API_KEY = process.env.ANTHROPIC_API_KEY;
 app.use(express.json({ limit: '20mb' }));
 app.use(express.static('public'));
 
-// Endpoint: analizar PDF completo
+function callAnthropic(body) {
+  return new Promise((resolve, reject) => {
+    const payload = JSON.stringify(body);
+    const options = {
+      hostname: 'api.anthropic.com',
+      path: '/v1/messages',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(payload),
+        'x-api-key': API_KEY,
+        'anthropic-version': '2023-06-01'
+      }
+    };
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try { resolve(JSON.parse(data)); }
+        catch (e) { reject(new Error('Respuesta inválida de la API')); }
+      });
+    });
+    req.on('error', reject);
+    req.write(payload);
+    req.end();
+  });
+}
+
 app.post('/api/analyze', async (req, res) => {
   if (!API_KEY) return res.status(500).json({ error: 'API key no configurada en el servidor.' });
   try {
-    const { base64, filename } = req.body;
+    const { base64 } = req.body;
     const prompt = `Eres un asistente especializado en documentos judiciales chilenos de la Oficina Judicial Virtual (OJV).
 Analiza este PDF y extrae TODAS las audiencias que aparecen.
 
@@ -37,27 +65,18 @@ Responde SOLO con JSON válido, sin texto ni markdown:
   "audiencias": [ { "fecha":"...", "hora":"...", "rit":"...", "rol_propiedad":"...", "tipo":"...", "tribunal":"...", "propiedad":"...", "ubicacion":"...", "demandante":"...", "demandado":"...", "estado":"...", "materia":"...", "observaciones":"..." } ]
 }`;
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 4000,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } },
-            { type: 'text', text: prompt }
-          ]
-        }]
-      })
+    const data = await callAnthropic({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4000,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } },
+          { type: 'text', text: prompt }
+        ]
+      }]
     });
 
-    const data = await response.json();
     if (data.error) return res.status(400).json({ error: data.error.message });
     const text = (data.content || []).map(b => b.text || '').join('');
     const clean = text.replace(/```json|```/g, '').trim();
@@ -67,7 +86,6 @@ Responde SOLO con JSON válido, sin texto ni markdown:
   }
 });
 
-// Endpoint: resumen estado procesal por causa
 app.post('/api/procesal', async (req, res) => {
   if (!API_KEY) return res.status(500).json({ error: 'API key no configurada en el servidor.' });
   try {
@@ -83,21 +101,12 @@ Usa <strong> para resaltar términos legales importantes.
 Datos de la audiencia:
 ${JSON.stringify(audiencia, null, 2)}`;
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content: prompt }]
-      })
+    const data = await callAnthropic({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: prompt }]
     });
 
-    const data = await response.json();
     if (data.error) return res.status(400).json({ error: data.error.message });
     const text = (data.content || []).map(b => b.text || '').join('').trim();
     res.json({ resumen: text });
